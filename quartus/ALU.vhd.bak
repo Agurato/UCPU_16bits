@@ -1,0 +1,52 @@
+LIBRARY ieee;
+USE ieee.std_logic_1164.all;
+
+ENTITY ALU_N IS
+GENERIC( SIZE_ALU : positive := 8);
+PORT (
+	a, b : in STD_LOGIC_VECTOR(SIZE_ALU-1 downto 0);
+	sel : in STD_LOGIC_VECTOR(2 downto 0);
+	
+	s : out STD_LOGIC_VECTOR(SIZE_ALU-1 downto 0);
+	c_out : out STD_LOGIC
+);
+END ENTITY;
+
+ARCHITECTURE Behavior of ALU_N IS
+
+	COMPONENT FULL_ADDER_N IS
+	GENERIC( SIZE_FA : positive := 8);
+	PORT (
+		a, b : in STD_LOGIC_VECTOR(SIZE_FA-1 downto 0);
+		s : out STD_LOGIC_VECTOR(SIZE_FA-1 downto 0);
+		c_out : out STD_LOGIC
+	);
+	END COMPONENT FULL_ADDER_N;
+
+	COMPONENT MULT_N IS
+		GENERIC (SIZE_MULT : positive := 8);
+		PORT (
+			a, b : in STD_LOGIC_VECTOR(SIZE_MULT-1 downto 0);
+			s : out STD_LOGIC_VECTOR(2*SIZE_MULT-1 downto 0)
+		);
+	END COMPONENT;
+
+	COMPONENT MUX_8_N IS
+	GENERIC( SIZE_MUX_8 : positive := 8);
+	PORT (
+		a, b, c, d, e, f, g, h : in STD_LOGIC_VECTOR(SIZE_MUX_8-1 downto 0) := (others => '0');
+		sel : in STD_LOGIC_VECTOR(2 downto 0);
+		s : out STD_LOGIC_VECTOR(SIZE_MUX_8-1 downto 0)
+	);
+	END COMPONENT;
+
+Signal adderResult : STD_LOGIC_VECTOR(SIZE_ALU-1 downto 0);
+Signal multResult : STD_LOGIC_VECTOR(SIZE_ALU-1 downto 0);
+BEGIN
+	
+	SwagAdder : FULL_ADDER_N GENERIC MAP (SIZE_ALU) PORT MAP (a => a, b => b, s => adderResult, c_out => c_out);
+	SwagMult : MULT_N GENERIC MAP (SIZE_ALU/2) PORT MAP (a => a(7 downto 0), b => b(7 downto 0), s => multResult);
+	SwagMux : MUX_8_N GENERIC MAP (SIZE_ALU) PORT MAP (a => a AND b, b => a OR b, c => adderResult, d => multResult, sel => sel, s => s);
+
+
+END Behavior;
