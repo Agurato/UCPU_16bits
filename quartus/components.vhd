@@ -121,6 +121,7 @@ BEGIN
 		"0000001" when "11";
 END Behavior;
 
+-- Hexa Display (positive)
 LIBRARY ieee;
 USE ieee.std_logic_1164.all;
 
@@ -153,6 +154,60 @@ BEGIN
 		"0111000" when "1111";--F
 END Behavior;
 
+-- Hexa Display (negative)
+LIBRARY ieee;
+USE ieee.std_logic_1164.all;
+
+ENTITY HEXA_DISPLAY_NEG IS
+PORT (
+	input : in STD_LOGIC_VECTOR(3 downto 0);
+	s_number : out STD_LOGIC_VECTOR(0 to 6);
+	s_sign : out STD_LOGIC_VECTOR(0 to 6)
+);
+END ENTITY;
+
+ARCHITECTURE Behavior OF HEXA_DISPLAY_NEG IS
+BEGIN
+	with input select
+		s_number <=
+		"0000001" when "0000",-- 0
+		"1001111" when "0001",-- 1
+		"0010010" when "0010",-- 2
+		"0000110" when "0011",-- 3
+		"1001100" when "0100",-- 4
+		"0100100" when "0101",-- 5
+		"0100000" when "0110",-- 6
+		"0001111" when "0111",-- 7
+		"0000000" when "1000",-- -8
+		"0001111" when "1001",-- -7
+		"0100000" when "1010",-- -6
+		"0100100" when "1011",-- -5
+		"1001100" when "1100",-- -4
+		"0000110" when "1101",-- -3
+		"0010010" when "1110",-- -2
+		"1001111" when "1111";-- -1
+		
+	with input select
+		s_sign <=
+		"1111111" when "0000",
+		"1111111" when "0001",
+		"1111111" when "0010",
+		"1111111" when "0011",
+		"1111111" when "0100",
+		"1111111" when "0101",
+		"1111111" when "0110",
+		"1111111" when "0111",
+		"1111110" when "1000",
+		"1111110" when "1001",
+		"1111110" when "1010",
+		"1111110" when "1011",
+		"1111110" when "1100",
+		"1111110" when "1101",
+		"1111110" when "1110",
+		"1111110" when "1111";
+END Behavior;
+
+-- Full Adder 1 bit
 LIBRARY ieee;
 USE ieee.std_logic_1164.all;
 
@@ -164,31 +219,9 @@ PORT (
 END ENTITY;
 
 ARCHITECTURE Behavior OF FULL_ADDER_1 IS
---Signal input : STD_LOGIC_VECTOR(2 downto 0);
 BEGIN
 	s <= a xor b xor c_in;
 	c_out <= (a and b) or (c_in and (a xor b));
-
-	--input <= c_in & a & b;
-	--with input select
-	--	c_out <= '0' when "000",
-	--		'0' when "001",
-	--		'0' when "010",
-	--		'1' when "011",
-	--		'0' when "100",
-	--		'1' when "101",
-	--		'1' when "110",
-	--		'1' when "111";
-			
-	--with input select
-	--	s <= '0' when "000",
-	--		'1' when "001",
-	--		'1' when "010",
-	--		'0' when "011",
-	--		'1' when "100",
-	-- 	'0' when "101",
-	--		'0' when "110",
-	--		'1' when "111";
 END Behavior;
 
 
@@ -296,7 +329,7 @@ ARCHITECTURE Behavior of MULT_4 IS
  	
 END ARCHITECTURE;
 
--- MULTIPLICATEUR N BITS (celui du prof mais il est buggé)
+-- MULTIPLICATEUR N BITS
 LIBRARY ieee;
 USE ieee.std_logic_1164.all;
 

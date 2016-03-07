@@ -1,69 +1,36 @@
--- FULL ADDER 1 BIT
-LIBRARY ieee;
-USE ieee.std_logic_1164.all;
-
-ENTITY FULL_ADDER_1 IS
-PORT (
-	a, b, c_in : in STD_LOGIC;
-	s, c_out : out STD_LOGIC
-);
-END ENTITY;
-
-ARCHITECTURE Behavior OF FULL_ADDER_1 IS
-BEGIN
-	s <= a xor b xor c_in;
-	c_out <= (a and b) or (c_in and (a xor b));
-END Behavior;
-
 -- TWO'S COMPLEMENT
 LIBRARY ieee;
 USE ieee.std_logic_1164.all;
 
 ENTITY TWOS_COMP IS
-GENERIC
-
--- FULL ADDER N BITS
-LIBRARY ieee;
-USE ieee.std_logic_1164.all;
-
-ENTITY FULL_ADDER_N IS
-GENERIC (SIZE_FA : positive := 8);
-PORT (
-	a, b : in STD_LOGIC_VECTOR(SIZE_FA-1 downto 0);
-	c_in : in STD_LOGIC;
-	s : out STD_LOGIC_VECTOR(SIZE_FA-1 downto 0);
-	c_out : out STD_LOGIC
-);
+	GENERIC (SIZE_COMP : positive := 8);
+	PORT(
+		b : in STD_LOGIC_VECTOR(SIZE_COMP-1 downto 0);
+		s : out STD_LOGIC_VECTOR(SIZE_COMP-1 downto 0)
+	);
 END ENTITY;
 
-ARCHITECTURE Behavior OF FULL_ADDER_N IS
+ARCHITECTURE Behavior OF TWOS_COMP IS
+	
+COMPONENT FULL_ADDER_N IS
+	GENERIC (SIZE_FA : positive := 8);
+	PORT (
+		a, b : in STD_LOGIC_VECTOR(SIZE_FA-1 downto 0);
+		c_in : in STD_LOGIC;
+		s : out STD_LOGIC_VECTOR(SIZE_FA-1 downto 0);
+		c_out : out STD_LOGIC
+	);
+END COMPONENT;
 
-COMPONENT FULL_ADDER_1 IS
-PORT (
-	a, b, c_in : in STD_LOGIC;
-	s, c_out : out STD_LOGIC
-);
-END COMPONENT FULL_ADDER_1;
+Signal invert : STD_LOGIC_VECTOR(SIZE_COMP-1 downto 0);
+Signal one : STD_LOGIC_VECTOR(SIZE_COMP-1 downto 0) := (others => '0');
 
-Signal c_out_inside : STD_LOGIC_VECTOR(SIZE_FA-2 downto 0);
 BEGIN
 	
-	AdderArray: for i in 1 to SIZE_FA generate
+	invert <= not(b);
+	one(0) <= '1';
+	adder : FULL_ADDER_N GENERIC MAP (SIZE_COMP) PORT MAP (a => invert, b => one, c_in => '0', s => s);
 	
-		first_adder: if i=1 generate
-			adder1: FULL_ADDER_1 PORT MAP (a => a(0), b => b(0), c_in => c_in, s => s(0), c_out => c_out_inside(0));
-		end generate first_adder;
-		
-		generic_adder: if i>1 and i<SIZE_FA generate
-			adderGeneric: FULL_ADDER_1 PORT MAP (a => a(i-1), b => b(i-1), c_in => c_out_inside(i-2), s => s(i-1), c_out => c_out_inside(i-1));
-		end generate generic_adder;
-		
-		last_adder: if i=SIZE_FA generate
-			adderSIZE: FULL_ADDER_1 PORT MAP (a => a(SIZE_FA-1), b => b(SIZE_FA-1), c_in => c_out_inside(SIZE_FA-2), s => s(SIZE_FA-1), c_out => c_out);
-		end generate last_adder;
-		
-	end generate AdderArray;
-
 END Behavior;
 
 -- ALU 8 operations, N bits
@@ -71,62 +38,111 @@ LIBRARY ieee;
 USE ieee.std_logic_1164.all;
 
 ENTITY ALU_8_N IS
-GENERIC( N_BITS : positive := 8);
+GENERIC (N_BITS : positive := 8);
 PORT (
 	a, b : in STD_LOGIC_VECTOR(N_BITS-1 downto 0);
 	sel : in STD_LOGIC_VECTOR(2 downto 0);
 	
 	s : out STD_LOGIC_VECTOR(N_BITS-1 downto 0);
-	c_out, overflow : out STD_LOGIC
+	overAdd, overMult : out STD_LOGIC
 );
 END ENTITY;
 
-ARCHITECTURE Behavior of ALU_N IS
+ARCHITECTURE Behavior of ALU_8_N IS
 
-	COMPONENT FULL_ADDER_N IS
+COMPONENT TWOS_COMP IS
+	GENERIC (SIZE_COMP : positive := 8);
+	PORT(
+		b : in STD_LOGIC_VECTOR(SIZE_COMP-1 downto 0);
+		s : out STD_LOGIC_VECTOR(SIZE_COMP-1 downto 0)
+	);
+END COMPONENT;
+
+COMPONENT FULL_ADDER_N IS
 	GENERIC( SIZE_FA : positive := 8);
 	PORT (
 		a, b : in STD_LOGIC_VECTOR(SIZE_FA-1 downto 0);
 		s : out STD_LOGIC_VECTOR(SIZE_FA-1 downto 0);
 		c_out : out STD_LOGIC
 	);
-	END COMPONENT FULL_ADDER_N;
+END COMPONENT FULL_ADDER_N;
 
-	COMPONENT MULT_N IS
-		GENERIC (SIZE_MULT : positive := 8);
-		PORT (
-			a, b : in STD_LOGIC_VECTOR(SIZE_MULT-1 downto 0);
-			s : out STD_LOGIC_VECTOR(2*SIZE_MULT-1 downto 0)
-		);
-	END COMPONENT;
+COMPONENT MULT_N IS
+	GENERIC (SIZE_MULT : positive := 8);
+	PORT (
+		a, b : in STD_LOGIC_VECTOR(SIZE_MULT-1 downto 0);
+		s : out STD_LOGIC_VECTOR(2*SIZE_MULT-1 downto 0)
+	);
+END COMPONENT;
 
-	COMPONENT MUX_8_N IS
+COMPONENT MUX_8_N IS
 	GENERIC( SIZE_MUX_8 : positive := 8);
 	PORT (
 		a, b, c, d, e, f, g, h : in STD_LOGIC_VECTOR(SIZE_MUX_8-1 downto 0) := (others => '0');
 		sel : in STD_LOGIC_VECTOR(2 downto 0);
 		s : out STD_LOGIC_VECTOR(SIZE_MUX_8-1 downto 0)
 	);
-	END COMPONENT;
+END COMPONENT;
 
+Signal subOperand : STD_LOGIC_VECTOR(N_BITS-1 downto 0);
+Signal c_out_sub : STD_LOGIC;
+Signal c_out_add : STD_LOGIC;
+	
 Signal adderResult : STD_LOGIC_VECTOR(N_BITS-1 downto 0);
 Signal subResult : STD_LOGIC_VECTOR(N_BITS-1 downto 0);
 Signal multResult : STD_LOGIC_VECTOR(2*N_BITS-1 downto 0);
 Signal multOFResult : STD_LOGIC_VECTOR(N_BITS-1 downto 0);
+Signal zero : STD_LOGIC_VECTOR(N_BITS-1 downto 0) := (others => '0');
 BEGIN
 	
-	adder : FULL_ADDER_N GENERIC MAP (N_BITS) PORT MAP (a => a, b => b, s => adderResult, c_out => c_out);
-	multiplier : MULT_N GENERIC MAP (N_BITS) PORT MAP (a => a(7 downto 0), b => b(7 downto 0), s => multResult);
+	-- Adder
+	adder : FULL_ADDER_N GENERIC MAP (N_BITS) PORT MAP (a => a, b => b, s => adderResult, c_out => c_out_add);
+	
+	-- Subber
+	inverter : TWOS_COMP GENERIC MAP (N_BITS) PORT MAP (b => b, s=>subOperand);
+	subber : FULL_ADDER_N GENERIC MAP (N_BITS) PORT MAP (a => a, b => subOperand, s=> subResult, c_out => c_out_sub);
+	
+	-- Overflow adder & subber
+	OF_add : process(a, b, c_out_add, c_out_sub, adderResult, subResult)
+	BEGIN
+		case sel is
+			when "000" =>
+				if (a(N_BITS-1)='0' and b(N_BITS-1)='0' and adderResult(N_BITS-1)='1') or
+					(a(N_BITS-1)='1' and b(N_BITS-1)='1' and adderResult(N_BITS-1)='0') or
+					c_out_add='1' then
+					
+					overAdd <= '1';
+				else
+					overAdd <= '0';
+				end if;
+			when "001" =>
+				if (a(N_BITS-1)='0' and b(N_BITS-1)='1' and subResult(N_BITS-1)='1') or
+					(a(N_BITS-1)='1' and b(N_BITS-1)='0' and subResult(N_BITS-1)='0') or
+					c_out_sub='1' then
+					
+					overAdd <= '1';
+				else
+					overAdd <= '0';
+				end if;
+			when others =>
+				overAdd <= '0';
+		end case;
+	END process OF_add;
+	
+	-- Multiplier
+	multiplier : MULT_N GENERIC MAP (N_BITS) PORT MAP (a => a(N_BITS-1 downto 0), b => b(N_BITS-1 downto 0), s => multResult);
 	
 	multOFresult <= multResult(N_BITS-1 downto 0);
 	
-	OF_check : process
+	-- Overflow multiplier
+	OF_mult : process(multResult)
 	BEGIN
-		if multResult(2*N_BITS-1 downto N_BITS) = (others => '0') then
-			overflow <= '1';
+		if multResult(2*N_BITS-1 downto N_BITS) /= zero then
+			overMult <= '1';
 		end if;
-	END process OF_check;
+	END process OF_mult;
 	
+	-- Multiplexer
 	multiplexer : MUX_8_N GENERIC MAP (N_BITS) 
 		PORT MAP (a => adderResult, b => subResult, c => multOFResult,
 			e => a AND b, f => a OR b, g => NOT(a), h => a XOR b, sel => sel, s => s);
