@@ -108,8 +108,7 @@ BEGIN
 		case sel is
 			when "000" =>
 				if (a(N_BITS-1)='0' and b(N_BITS-1)='0' and adderResult(N_BITS-1)='1') or
-					(a(N_BITS-1)='1' and b(N_BITS-1)='1' and adderResult(N_BITS-1)='0') or
-					c_out_add='1' then
+					(a(N_BITS-1)='1' and b(N_BITS-1)='1' and adderResult(N_BITS-1)='0') then
 					
 					overAdd <= '1';
 				else
@@ -117,8 +116,7 @@ BEGIN
 				end if;
 			when "001" =>
 				if (a(N_BITS-1)='0' and b(N_BITS-1)='1' and subResult(N_BITS-1)='1') or
-					(a(N_BITS-1)='1' and b(N_BITS-1)='0' and subResult(N_BITS-1)='0') or
-					c_out_sub='1' then
+					(a(N_BITS-1)='1' and b(N_BITS-1)='0' and subResult(N_BITS-1)='0') then
 					
 					overAdd <= '1';
 				else
@@ -139,6 +137,15 @@ BEGIN
 	BEGIN
 		if multResult(2*N_BITS-1 downto N_BITS) /= zero then
 			overMult <= '1';
+		else
+			if (a(N_BITS-1)='0' and b(N_BITS-1)='0' and multOFresult(N_BITS-1)='1') or
+				(a(N_BITS-1)='0' and b(N_BITS-1)='1' and multOFresult(N_BITS-1)='0') or
+				(a(N_BITS-1)='1' and b(N_BITS-1)='0' and multOFresult(N_BITS-1)='0') or
+				(a(N_BITS-1)='1' and b(N_BITS-1)='1' and multOFresult(N_BITS-1)='1') then
+				overMult <= '1';
+			else
+				overMult <= '0';
+			end if;
 		end if;
 	END process OF_mult;
 	

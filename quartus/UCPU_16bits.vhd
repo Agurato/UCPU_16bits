@@ -38,6 +38,9 @@ Signal overAdd, overMult : STD_LOGIC;
 
 BEGIN
 
+	-- TODO : Overflow du mutliplicateur à corriger
+	-- utiliser le truc du controle
+
 	LEDR(17 downto 14) <= SW(17 downto 14);
 	LEDR(11 downto 8) <= SW(11 downto 8);
 	LEDR(5 downto 3) <= SW(5 downto 3);
