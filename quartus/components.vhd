@@ -1,109 +1,6 @@
 LIBRARY ieee;
 USE ieee.std_logic_1164.all;
 
-ENTITY MUX_2_1 IS
-PORT (
-	x, y, s : in STD_LOGIC;
-	m : out STD_LOGIC
-);
-END MUX_2_1;
-
-ARCHITECTURE Behavior OF MUX_2_1 IS
-BEGIN
-	m <= (NOT (s) AND x) OR (s AND y);
-END Behavior;
-
-LIBRARY ieee;
-USE ieee.std_logic_1164.all;
-
-ENTITY MUX_2_8 IS
-PORT (
-	s : in STD_LOGIC;
-	x, y : in STD_LOGIC_VECTOR(7 DOWNTO 0);
-	m : out STD_LOGIC_VECTOR(7 DOWNTO 0)
-);
-END MUX_2_8;
-
-ARCHITECTURE Behavior OF MUX_2_8 IS
-	COMPONENT MUX_2_1 IS
-	PORT (
-		x, y, s : in STD_LOGIC;
-		m : out STD_LOGIC
-	);
-	END COMPONENT MUX_2_1;
-	
-	BEGIN		
-		mux0 : MUX_2_1 PORT MAP (x => x(0), y => y(0), s => s, m => m(0));
-		mux1 : MUX_2_1 PORT MAP (x => x(1), y => y(1), s => s, m => m(1));
-		mux2 : MUX_2_1 PORT MAP (x => x(2), y => y(2), s => s, m => m(2));
-		mux3 : MUX_2_1 PORT MAP (x => x(3), y => y(3), s => s, m => m(3));
-		mux4 : MUX_2_1 PORT MAP (x => x(4), y => y(4), s => s, m => m(4));
-		mux5 : MUX_2_1 PORT MAP (x => x(5), y => y(5), s => s, m => m(5));
-		mux6 : MUX_2_1 PORT MAP (x => x(6), y => y(6), s => s, m => m(6));
-		mux7 : MUX_2_1 PORT MAP (x => x(7), y => y(7), s => s, m => m(7));
-
-	END Behavior;
-	
-LIBRARY ieee;
-USE ieee.std_logic_1164.all;
-
-ENTITY MUX_5_1 IS
-PORT (
-	s : in STD_LOGIC_VECTOR(2 downto 0);
-	u, v, w, x, y : in STD_LOGIC;
-	m : out STD_LOGIC
-);
-END MUX_5_1;
-
-ARCHITECTURE Behavior OF MUX_5_1 IS
-	COMPONENT MUX_2_1 IS
-	PORT (
-		x, y, s : in STD_LOGIC;
-		m : out STD_LOGIC
-	);
-	END COMPONENT MUX_2_1;
-	Signal cout_mux0 : std_logic;
-	Signal cout_mux1 : std_logic;
-	Signal cout_mux2 : std_logic;
-	
-	BEGIN		
-		mux0 : MUX_2_1 PORT MAP (x => u, y => v, s => s(0), m => cout_mux0);
-		mux1 : MUX_2_1 PORT MAP (x => w, y => x, s => s(0), m => cout_mux1);
-		mux2 : MUX_2_1 PORT MAP (x => cout_mux0, y => cout_mux1, s => s(1), m => cout_mux2);
-		mux3 : MUX_2_1 PORT MAP (x => cout_mux2, y => y, s => s(2), m => m);
-
-END Behavior;
-
-LIBRARY ieee;
-USE ieee.std_logic_1164.all;
-
-ENTITY MUX_5_3 IS
-PORT (
-	s : in STD_LOGIC_VECTOR(2 downto 0);
-	u, v, w, x, y : in STD_LOGIC_VECTOR(2 downto 0);
-	m : out STD_LOGIC_VECTOR(2 downto 0)
-);
-END MUX_5_3;
-
-ARCHITECTURE Behavior OF MUX_5_3 IS
-	COMPONENT MUX_5_1 IS
-	PORT (
-		s : in STD_LOGIC_VECTOR(2 downto 0);
-		u, v, w, x, y : in STD_LOGIC;
-		m : out STD_LOGIC
-	);
-	END COMPONENT MUX_5_1;
-	
-	BEGIN		
-		mux0 : MUX_5_1 PORT MAP (u => u(0), v => v(0), w => w(0), x => x(0), y => y(0), s => s, m => m(0));
-		mux1 : MUX_5_1 PORT MAP (u => u(1), v => v(1), w => w(1), x => x(1), y => y(1), s => s, m => m(1));
-		mux2 : MUX_5_1 PORT MAP (u => u(2), v => v(2), w => w(2), x => x(2), y => y(2), s => s, m => m(2));
-
-END Behavior;
-
-LIBRARY ieee;
-USE ieee.std_logic_1164.all;
-
 ENTITY LETTER_DISPLAY IS
 PORT (
 		sel : in STD_LOGIC_VECTOR(1 downto 0);
@@ -334,11 +231,11 @@ LIBRARY ieee;
 USE ieee.std_logic_1164.all;
 
 ENTITY MULT_N IS
-GENERIC (SIZE_MULT : positive := 8);
-PORT (
-	a, b : in STD_LOGIC_VECTOR(SIZE_MULT-1 downto 0);
-	s : out STD_LOGIC_VECTOR(2*SIZE_MULT-1 downto 0)
-);
+	GENERIC (SIZE_MULT : positive := 8);
+	PORT (
+		a, b : in STD_LOGIC_VECTOR(SIZE_MULT-1 downto 0);
+		s : out STD_LOGIC_VECTOR(2*SIZE_MULT-1 downto 0)
+	);
 END MULT_N;
 
 ARCHITECTURE Behavior of MULT_N IS
@@ -388,24 +285,24 @@ LIBRARY ieee;
 USE ieee.std_logic_1164.all;
 
 ENTITY MULTIPLIER_N IS
-generic( SIZE_MUL : positive := 8);
-PORT (
-	a, b : in STD_LOGIC_VECTOR(SIZE_MUL-1 downto 0);
-	s : out STD_LOGIC_VECTOR((2*SIZE_MUL)-1 downto 0)
-);
+	GENERIC ( SIZE_MUL : positive := 8);
+	PORT (
+		a, b : in STD_LOGIC_VECTOR(SIZE_MUL-1 downto 0);
+		s : out STD_LOGIC_VECTOR((2*SIZE_MUL)-1 downto 0)
+	);
 END ENTITY;
 
 ARCHITECTURE Behavior OF MULTIPLIER_N IS
 
-COMPONENT FULL_ADDER_N IS
-generic( SIZE_FA : positive := 8);
-PORT (
-	a, b : in STD_LOGIC_VECTOR(SIZE_FA-1 downto 0);
-	c_in : in STD_LOGIC;
-	s : out STD_LOGIC_VECTOR(SIZE_FA-1 downto 0);
-	c_out : out STD_LOGIC
-);
-END COMPONENT FULL_ADDER_N;
+	COMPONENT FULL_ADDER_N IS
+		GENERIC( SIZE_FA : positive := 8);
+		PORT (
+			a, b : in STD_LOGIC_VECTOR(SIZE_FA-1 downto 0);
+			c_in : in STD_LOGIC;
+			s : out STD_LOGIC_VECTOR(SIZE_FA-1 downto 0);
+			c_out : out STD_LOGIC
+		);
+	END COMPONENT FULL_ADDER_N;
 
 Signal c_out_inside : STD_LOGIC_VECTOR(SIZE_MUL-2 downto 0);
 Signal transmission : STD_LOGIC_VECTOR(SIZE_MUL*(SIZE_MUL+1)-1 downto 0);
@@ -460,32 +357,6 @@ BEGIN
 	end process;
 END Behavior;
 
--- MULTIPLEXEUR 8 ENTRÉES À N BITS
-LIBRARY ieee;
-USE ieee.std_logic_1164.all;
-
-ENTITY MUX_8_N IS
-GENERIC( SIZE_MUX_8 : positive := 8);
-PORT (
-	a, b, c, d, e, f, g, h : in STD_LOGIC_VECTOR(SIZE_MUX_8-1 downto 0) := (others => '0');
-	sel : in STD_LOGIC_VECTOR(2 downto 0);
-	s : out STD_LOGIC_VECTOR(SIZE_MUX_8-1 downto 0)
-);
-END ENTITY;
-
-ARCHITECTURE Behavior of MUX_8_N IS
-BEGIN
-	with sel select
-	s <=	a when "000",
-			b when "001",
-			c when "010",
-			d when "011",
-			e when "100",
-			f when "101",
-			g when "110",
-			h when "111";
-END Behavior;
-
 -- ARITHMETIC LOGIC UNIT 8 OPERATIONS AND N BITS
 LIBRARY ieee;
 USE ieee.std_logic_1164.all;
@@ -521,12 +392,12 @@ ARCHITECTURE Behavior of ALU_N IS
 	END COMPONENT;
 
 	COMPONENT MUX_8_N IS
-	GENERIC( SIZE_MUX_8 : positive := 8);
-	PORT (
-		a, b, c, d, e, f, g, h : in STD_LOGIC_VECTOR(SIZE_MUX_8-1 downto 0) := (others => '0');
-		sel : in STD_LOGIC_VECTOR(2 downto 0);
-		s : out STD_LOGIC_VECTOR(SIZE_MUX_8-1 downto 0)
-	);
+		GENERIC( SIZE_MUX_8 : positive := 8);
+		PORT (
+			a, b, c, d, e, f, g, h : in STD_LOGIC_VECTOR(SIZE_MUX_8-1 downto 0) := (others => '0');
+			sel : in STD_LOGIC_VECTOR(2 downto 0);
+			s : out STD_LOGIC_VECTOR(SIZE_MUX_8-1 downto 0)
+		);
 	END COMPONENT;
 
 Signal adderResult : STD_LOGIC_VECTOR(SIZE_ALU-1 downto 0);
