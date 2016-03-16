@@ -52,6 +52,8 @@ BEGIN
 	hexb : HEXA_DISPLAY_NEG PORT MAP (input => SW(11 downto 8), s_sign => HEX5, s_number => HEX4);
 	hexs : HEXA_DISPLAY_NEG PORT MAP (input => output, s_sign => HEX1, s_number => HEX0);
 	
+	LEDG(3 downto 0) <= output;
+	
 	LEDR(1) <= overAdd;
 	LEDR(0) <= overMult;
 
