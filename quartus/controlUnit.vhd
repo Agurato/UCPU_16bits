@@ -17,9 +17,9 @@ END ControlUnit;
 
 ARCHITECTURE Behavior OF ControlUnit IS
 TYPE state_t IS (idle, init, move, moveImmediate, moveImmediate2, operation, done);
-VARIABLE state : state_t;
 BEGIN
 	PROCESS(clk)
+	VARIABLE state : state_t;
 	BEGIN
 		--reset
 		if(reset = '0') then state := init;
@@ -108,7 +108,8 @@ GENERIC(NBITS : positive := 16);
 PORT (
 	clock, Run, nReset: IN std_logic;
 	Din: IN std_logic_vector(NBITS-1 downto 0);
-	Done : OUT std_logic
+	Done : OUT std_logic;
+	Result : OUT std_logic_vector(NBITS-1 downto 0)
 );
 END CPU;
 
@@ -198,11 +199,11 @@ BEGIN
 
 	muxA : MUX_8_N GENERIC MAP(NBITS) PORT MAP(a => reg_output(0), b => reg_output(1), c => reg_output(2), d => reg_output(4),
 															 e => reg_output(4), f => reg_output(5), g => reg_output(6), h => reg_output(7),
-															 sel => sel_a, s => a);
+															 sel => sel_a(2 downto 0), s => a);
 
 	muxB : MUX_8_N GENERIC MAP(NBITS) PORT MAP(a => reg_output(0), b => reg_output(1), c => reg_output(2), d => reg_output(4),
 															 e => reg_output(4), f => reg_output(5), g => reg_output(6), h => reg_output(7),
-															 sel => sel_b, s => b);
+															 sel => sel_b(2 downto 0), s => b);
 
 	alu : ALU_N GENERIC MAP(NBITS) PORT MAP(a => a, b => b,
 														 sel => sel_alu,
