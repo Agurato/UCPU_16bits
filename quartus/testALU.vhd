@@ -5,8 +5,8 @@ USE ieee.std_logic_1164.all;
 ENTITY DIV_N IS
 	GENERIC (SIZE_DIV : positive := 8);
 	PORT (
-		a, b : in STD_LOGIC_VECTOR(SIZE_MULT-1 downto 0);
-		s : out STD_LOGIC_VECTOR(2*SIZE_MULT-1 downto 0)
+		a, b : in STD_LOGIC_VECTOR(SIZE_DIV-1 downto 0);
+		s : out STD_LOGIC_VECTOR(2*SIZE_DIV-1 downto 0)
 	);
 END DIV_N;
 
