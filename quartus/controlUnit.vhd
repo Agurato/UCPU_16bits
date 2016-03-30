@@ -10,6 +10,7 @@ PORT (
 	selA, selB : OUT std_logic_vector(3 downto 0);
 	aluSel : OUT std_logic_vector(2 downto 0);
 	selWrite : OUT std_logic_vector(3 downto 0);
+	writeSource: OUT std_logic;
 	DoneSignal, idleSignal : OUT std_logic;
 	countClock : OUT std_logic_vector(7 downto 0);
 	clk: IN std_logic;
@@ -31,10 +32,11 @@ BEGIN
 			selB <= "1111"; -- B from In
 			aluSel <= "111"; -- empty operation from alu
 			selWrite <= "1111"; -- no write
+			writeSource <= '0';
 			
 			DoneSignal <= '0';
 
-			state := idle;
+			state := done;
 			idleSignal <= '1';
 			countClock <= "00000000";
 
@@ -69,7 +71,7 @@ BEGIN
 			aluSel <= "100"; -- AND or OR
 			selWrite <= CODOP(NBITS-5 downto NBITS-8);
 
-			state := idle;
+			state := done;
 			countClock <= "00000000";
 			idleSignal <= '1';
 
@@ -79,6 +81,7 @@ BEGIN
 			selA <= "1111";
 			aluSel <= "100"; -- AND or OR
 			selWrite <= CODOP(NBITS-5 downto NBITS-8);
+			writeSource <= '1';
 
 			state := moveImmediate2;
 			countClock <= "00000011";
@@ -87,7 +90,7 @@ BEGIN
 		--moveImmediate2: memorize
 		elsif(RISING_EDGE(clk) AND run = '1' AND state = moveImmediate2) then
 		
-			state := idle;
+			state := done;
 			countClock <= "00000000";
 			idleSignal <= '1';
 
@@ -98,7 +101,7 @@ BEGIN
 			aluSel <= CODOP(NBITS-2 downto NBITS-4);
 			selWrite <= CODOP(NBITS-5 downto NBITS-8);
 
-			state := idle;
+			state := done;
 			countClock <= "00000000";
 			idleSignal <= '1';
 
@@ -110,6 +113,7 @@ BEGIN
 			aluSel <= "111";
 			selWrite <= "1111";
 			DoneSignal <= '1';
+			writeSource <= '0';
 
 			state := idle;
 			countClock <= "00000000";
@@ -194,6 +198,7 @@ PORT (
 	selA, selB : OUT std_logic_vector(3 downto 0);
 	aluSel : OUT std_logic_vector(2 downto 0);
 	selWrite : OUT std_logic_vector(3 downto 0);
+	writeSource: OUT std_logic;
 	DoneSignal, idleSignal : OUT std_logic;
 	countClock : OUT std_logic_vector(7 downto 0);
 	clk: IN std_logic;
@@ -250,13 +255,13 @@ BEGIN
 
 	codopRegister : REGISTER_N GENERIC MAP(NBITS) PORT MAP (d => Din, en => saveCODOP, clk => clock, r => nReset, q => CODOP);
 	FSM : ControlUnit GENERIC MAP(NBITS) PORT MAP(run => Run, reset => nReset, CODOP => CODOP, clk => clock,
-																 aluSel => sel_alu, selA => sel_a, selB => sel_b, DoneSignal => Done,
-																 idleSignal => idle, selWrite => sel_write, countClock => countClock, CODOPout => CODOPout);
+																 aluSel => sel_alu, selA => sel_a, selB => sel_b, DoneSignal => Done, writeSource => write_origin,
+																 idleSignal => idle, selWrite => sel_write, countClock => countClock, CODOPout => CODOPout, CODOPSave => saveCODOP);
 
-	with sel_write select
-		write_origin <=
-		'1' when "1111",
-		'0' when others;
+	--with sel_write select
+	--	write_origin <=
+	--	'1' when "1111",
+	--	'0' when others;
 	
 	write_hot : ONE_HOT_8 PORT MAP(sel => sel_write(2 downto 0), s => write_in_reg(7 downto 0));
 END Behavior;
