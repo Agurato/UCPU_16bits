@@ -184,3 +184,26 @@ BEGIN
 			o when "1110",
 			p when "1111";
 END Behavior;
+
+LIBRARY ieee;
+USE ieee.std_logic_1164.all;
+
+ENTITY ONE_HOT_8 IS
+	PORT (
+		sel : in STD_LOGIC_VECTOR(2 downto 0);
+		s : out STD_LOGIC_VECTOR(7 downto 0)
+	);
+END ENTITY ONE_HOT_8;
+
+ARCHITECTURE Behavior of ONE_HOT_8 IS
+BEGIN
+	with sel select
+	s <=	"00000001" when "000",
+			"00000010" when "001",
+			"00000100" when "010",
+			"00001000" when "011",
+			"00010000" when "100",
+			"00100000" when "101",
+			"01000000" when "110",
+			"10000000" when "111";
+END Behavior;
