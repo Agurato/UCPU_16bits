@@ -10,87 +10,114 @@ PORT (
 	selA, selB : OUT std_logic_vector(3 downto 0);
 	aluSel : OUT std_logic_vector(2 downto 0);
 	selWrite : OUT std_logic_vector(3 downto 0);
-	DoneSignal : OUT std_logic;
-	clk: IN std_logic
+	writeSource: OUT std_logic;
+	DoneSignal, idleSignal : OUT std_logic;
+	countClock : OUT std_logic_vector(7 downto 0);
+	clk: IN std_logic;
+	CODOPout : OUT std_logic_vector(3 downto 0)
 );
 END ControlUnit;
 
 ARCHITECTURE Behavior OF ControlUnit IS
-TYPE state_t IS (idle, init, move, moveImmediate, moveImmediate2, operation, done);
+TYPE state_t IS (idle, move, moveImmediate, moveImmediate2, operation, done);
+
 BEGIN
-	PROCESS(clk)
+	PROCESS(clk, reset)
 	VARIABLE state : state_t;
 	BEGIN
 		--reset
-		if(reset = '0') then state := init;
-
-		--init
-		elsif(clk = '1' AND state = init) then
+		if(reset = '0') then
 			CODOPSave <= '1';
 			selA <= "1111"; -- A from In
 			selB <= "1111"; -- B from In
 			aluSel <= "111"; -- empty operation from alu
 			selWrite <= "1111"; -- no write
+			writeSource <= '0';
+			
 			DoneSignal <= '0';
 
-			state := idle;
+			state := done;
+			idleSignal <= '1';
+			countClock <= "00000000";
 
 		--idle
-		elsif(clk = '1'  AND run = '1' AND state = idle) then
+		elsif(RISING_EDGE(clk)  AND run = '1' AND state = idle) then
 			--do things
 			DoneSignal <= '0';
 			--store CODOP
 			CODOPSave <= '0';
+			CODOPout <= CODOP(NBITS-1 downto NBITS-4);
 
 			if(CODOP(NBITS-1 downto NBITS-4) = "0000") then
 				state := move;
+				countClock <= "00000001";
+			
 			elsif(CODOP(NBITS-1 downto NBITS-4) = "0001") then
 				state := moveImmediate;
+				countClock <= "00000010";
+				
 			elsif(CODOP(NBITS-1) = '1') then
 				state := operation;
+				countClock <= "00000100";
+				
 			end if;
+			
+			idleSignal <= '0';
 
 		--move
-		elsif(clk = '1'  AND run = '1' AND state = move) then
+		elsif(RISING_EDGE(clk) AND run = '1' AND state = move) then
 			selA <= CODOP(NBITS-9 downto NBITS-12);
 			selB <= CODOP(NBITS-9 downto NBITS-12);
 			aluSel <= "100"; -- AND or OR
 			selWrite <= CODOP(NBITS-5 downto NBITS-8);
 
 			state := done;
+			countClock <= "00000000";
+			idleSignal <= '1';
 
 		--moveImmediate1: wait clock redirect
-		elsif(clk = '1'  AND run = '1' AND state = moveImmediate) then
+		elsif(RISING_EDGE(clk) AND run = '1' AND state = moveImmediate) then
 			selA <= "1111";
 			selA <= "1111";
 			aluSel <= "100"; -- AND or OR
 			selWrite <= CODOP(NBITS-5 downto NBITS-8);
+			writeSource <= '1';
 
 			state := moveImmediate2;
+			countClock <= "00000011";
+			idleSignal <= '0';
 
 		--moveImmediate2: memorize
-		elsif(clk = '1'  AND run = '1' AND state = moveImmediate2) then
+		elsif(RISING_EDGE(clk) AND run = '1' AND state = moveImmediate2) then
+		
 			state := done;
+			countClock <= "00000000";
+			idleSignal <= '1';
 
 		--operation
-		elsif(clk = '1'  AND run = '1' AND state = operation) then
+		elsif(RISING_EDGE(clk) AND run = '1' AND state = operation) then
 			selA <= CODOP(NBITS-5 downto NBITS-8);
 			selB <= CODOP(NBITS-9 downto NBITS-12);
 			aluSel <= CODOP(NBITS-2 downto NBITS-4);
 			selWrite <= CODOP(NBITS-5 downto NBITS-8);
 
 			state := done;
+			countClock <= "00000000";
+			idleSignal <= '1';
 
 		--DONE
-		elsif(clk = '1'  AND run = '1' AND state = done) then
+		elsif(RISING_EDGE(clk) AND run = '1' AND state = done) then
 			CODOPSave <= '1';
 			selA <= "1111";
 			selB <= "1111";
 			aluSel <= "111";
 			selWrite <= "1111";
 			DoneSignal <= '1';
+			writeSource <= '0';
 
 			state := idle;
+			countClock <= "00000000";
+			idleSignal <= '1';
 
 		end if;
 	END PROCESS;
@@ -108,8 +135,10 @@ GENERIC(NBITS : positive := 16);
 PORT (
 	clock, Run, nReset: IN std_logic;
 	Din: IN std_logic_vector(NBITS-1 downto 0);
-	Done : OUT std_logic;
-	Result : OUT std_logic_vector(NBITS-1 downto 0)
+	Done, idle : OUT std_logic;
+	Result : OUT std_logic_vector(NBITS-1 downto 0);
+	countClock : OUT std_logic_vector(7 downto 0);
+	CODOPout : OUT std_logic_vector(3 downto 0)
 );
 END CPU;
 
@@ -153,6 +182,13 @@ PORT (
 );
 END COMPONENT MUX_2_N;
 
+COMPONENT ONE_HOT_8 IS
+	PORT (
+		sel : in STD_LOGIC_VECTOR(2 downto 0);
+		s : out STD_LOGIC_VECTOR(7 downto 0)
+	);
+END COMPONENT ONE_HOT_8;
+
 COMPONENT ControlUnit IS
 GENERIC(NBITS : positive := 16);
 PORT (
@@ -162,8 +198,11 @@ PORT (
 	selA, selB : OUT std_logic_vector(3 downto 0);
 	aluSel : OUT std_logic_vector(2 downto 0);
 	selWrite : OUT std_logic_vector(3 downto 0);
-	DoneSignal : OUT std_logic;
-	clk: IN std_logic
+	writeSource: OUT std_logic;
+	DoneSignal, idleSignal : OUT std_logic;
+	countClock : OUT std_logic_vector(7 downto 0);
+	clk: IN std_logic;
+	CODOPout : OUT std_logic_vector(3 downto 0)
 );
 END COMPONENT ControlUnit;
 
@@ -179,6 +218,7 @@ SIGNAL sel_b : std_logic_vector(3 downto 0);
 SIGNAL b : STD_LOGIC_VECTOR(NBITS-1 downto 0);
 
 SIGNAL sel_alu : STD_LOGIC_VECTOR(2 downto 0);
+SIGNAL sel_write : STD_LOGIC_VECTOR(3 downto 0);
 SIGNAL alu_output : STD_LOGIC_VECTOR(NBITS-1 downto 0);
 SIGNAL overflow : STD_LOGIC;
 
@@ -211,9 +251,17 @@ BEGIN
 
 	dataSelector : MUX_2_N GENERIC MAP(NBITS) PORT MAP(a => alu_output, b => Din,
 																		sel => write_origin, s => write_data);
+	Result <= write_data;
 
 	codopRegister : REGISTER_N GENERIC MAP(NBITS) PORT MAP (d => Din, en => saveCODOP, clk => clock, r => nReset, q => CODOP);
 	FSM : ControlUnit GENERIC MAP(NBITS) PORT MAP(run => Run, reset => nReset, CODOP => CODOP, clk => clock,
-																			aluSel => sel_alu, selA => sel_a, selB => sel_b, DoneSignal => Done);
+																 aluSel => sel_alu, selA => sel_a, selB => sel_b, DoneSignal => Done, writeSource => write_origin,
+																 idleSignal => idle, selWrite => sel_write, countClock => countClock, CODOPout => CODOPout, CODOPSave => saveCODOP);
 
+	--with sel_write select
+	--	write_origin <=
+	--	'1' when "1111",
+	--	'0' when others;
+	
+	write_hot : ONE_HOT_8 PORT MAP(sel => sel_write(2 downto 0), s => write_in_reg(7 downto 0));
 END Behavior;

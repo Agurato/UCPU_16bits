@@ -351,7 +351,7 @@ BEGIN
 	begin
 		if r = '0' then
 			q <= (others=>'0');
-		elsif clk'event and clk='1' and en='1' then
+		elsif RISING_EDGE(clk) and en='1' then
 			q <= d;
 		end if;
 	end process;
