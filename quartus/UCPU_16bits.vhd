@@ -7,7 +7,7 @@ PORT (
 	SW : in STD_LOGIC_VECTOR(17 downto 0);
 	LEDR : out STD_LOGIC_VECTOR(17 downto 0);
 	LEDG: out STD_LOGIC_VECTOR(7 downto 0);
-	HEX7, HEX5, HEX4, HEX3, HEX2, HEX1, HEX0: out STD_LOGIC_VECTOR(0 to 6);
+	HEX7, HEX6, HEX5, HEX4, HEX3, HEX2, HEX1, HEX0: out STD_LOGIC_VECTOR(0 to 6);
 	KEY: in STD_LOGIC_VECTOR(7 downto 0);
 	CLOCK_50: IN STD_LOGIC
 );
@@ -39,8 +39,10 @@ GENERIC(NBITS : positive := 16);
 PORT (
 	clock, Run, nReset: IN std_logic;
 	Din: IN std_logic_vector(NBITS-1 downto 0);
-	Done, idle : OUT std_logic;
+	Done, idle, writing0, writing1 : OUT std_logic;
 	Result : OUT std_logic_vector(NBITS-1 downto 0);
+	in0 : OUT std_logic_vector(NBITS-1 downto 0);
+	in1 : OUT std_logic_vector(NBITS-1 downto 0);
 	countClock : OUT std_logic_vector(7 downto 0);
 	CODOPout : OUT std_logic_vector(3 downto 0)
 );
@@ -51,7 +53,7 @@ COMPONENT debouncer is
 			s_o: OUT std_logic);
 END COMPONENT debouncer;
 
-Signal output : STD_LOGIC_VECTOR(15 downto 0);
+Signal output, in0, in1 : STD_LOGIC_VECTOR(15 downto 0);
 Signal overAdd, overMult : STD_LOGIC;
 Signal clockSignal: STD_LOGIC;
 Signal idleState : STD_LOGIC;
@@ -69,25 +71,30 @@ BEGIN
 	
 	beloved_cpu : CPU GENERIC MAP(16) PORT MAP(clock => clockSignal, Run => SW(17), nReset => KEY(0),
 														Din => SW(15 downto 0),
-														Result => output, Done => LEDG(7), idle => idleState,
-														countClock => countClock, CODOPout => instruction);
-		
-	hexa3 : HEXA_DISPLAY PORT MAP (input => output(15 downto 12), display => HEX3);
-	hexa2 : HEXA_DISPLAY PORT MAP (input => output(11 downto 8), display => HEX2);
-	hexa1 : HEXA_DISPLAY PORT MAP (input => output(7 downto 4), display => HEX1);
-	hexa0 : HEXA_DISPLAY PORT MAP (input => output(3 downto 0), display => HEX0);
+														Result => output, in0 => in0, in1 => in1, Done => LEDG(7), idle => idleState,
+														countClock => countClock, CODOPout => instruction,
+														writing0 => LEDG(4), writing1 => LEDG(3));
+														
+	hexa5 : HEXA_DISPLAY PORT MAP (input => output(7 downto 4), display => HEX5);
+	hexa4 : HEXA_DISPLAY PORT MAP (input => output(3 downto 0), display => HEX4);
 	
-	count1 : HEXA_DISPLAY PORT MAP (input => instruction, display => HEX5);
-	count2 : HEXA_DISPLAY PORT MAP (input => countClock(3 downto 0), display => HEX4);
+	hexa3 : HEXA_DISPLAY PORT MAP (input => in0(7 downto 4), display => HEX3);
+	hexa2 : HEXA_DISPLAY PORT MAP (input => in0(3 downto 0), display => HEX2);
 	
-	process(idleState)
-	begin
-		if idleState = '1' then
-			HEX7 <= "1001111";
-		else
-			HEX7 <= "0011000";
-		end if;
-	end process;
+	hexa1 : HEXA_DISPLAY PORT MAP (input => in1(7 downto 4), display => HEX1);
+	hexa0 : HEXA_DISPLAY PORT MAP (input => in1(3 downto 0), display => HEX0);
+	
+	count1 : HEXA_DISPLAY PORT MAP (input => instruction, display => HEX6);
+	count2 : HEXA_DISPLAY PORT MAP (input => countClock(3 downto 0), display => HEX7);
+	
+	--process(idleState)
+	--begin
+	--	if idleState = '1' then
+	--		HEX7 <= "1001111";
+	--	else
+	--		HEX7 <= "0011000";
+	--	end if;
+	--end process;
 	
 	LEDG(0) <= NOT(key(0));
 	LEDG(6) <= clockSignal;

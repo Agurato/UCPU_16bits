@@ -51,14 +51,32 @@ BEGIN
 			if(CODOP(NBITS-1 downto NBITS-4) = "0000") then
 				state := move;
 				countClock <= "00000001";
+				
+				selA <= CODOP(NBITS-9 downto NBITS-12);
+				selB <= CODOP(NBITS-9 downto NBITS-12);
+				aluSel <= "100"; -- AND or OR
+				selWrite <= CODOP(NBITS-5 downto NBITS-8);
+				writeSource <= '0';
 			
 			elsif(CODOP(NBITS-1 downto NBITS-4) = "0001") then
 				state := moveImmediate;
 				countClock <= "00000010";
 				
+				selA <= "1111";
+				selA <= "1111";
+				aluSel <= "100"; -- AND or OR
+				selWrite <= CODOP(NBITS-5 downto NBITS-8);
+				writeSource <= '1';
+				
 			elsif(CODOP(NBITS-1) = '1') then
 				state := operation;
 				countClock <= "00000100";
+				
+				selA <= CODOP(NBITS-5 downto NBITS-8);
+				selB <= CODOP(NBITS-9 downto NBITS-12);
+				aluSel <= CODOP(NBITS-2 downto NBITS-4);
+				selWrite <= CODOP(NBITS-5 downto NBITS-8);
+				writeSource <= '0';
 				
 			end if;
 			
@@ -66,23 +84,20 @@ BEGIN
 
 		--move
 		elsif(RISING_EDGE(clk) AND run = '1' AND state = move) then
-			selA <= CODOP(NBITS-9 downto NBITS-12);
-			selB <= CODOP(NBITS-9 downto NBITS-12);
-			aluSel <= "100"; -- AND or OR
-			selWrite <= CODOP(NBITS-5 downto NBITS-8);
+			selA <= "1111";
+			selB <= "1111";
+			aluSel <= "111";
+			selWrite <= "1111";
+			DoneSignal <= '1';
+			writeSource <= '0';
 
 			state := done;
-			countClock <= "00000000";
+			countClock <= "00001111";
 			idleSignal <= '1';
 			CODOPSave <= '1';
 
 		--moveImmediate1: wait clock redirect
 		elsif(RISING_EDGE(clk) AND run = '1' AND state = moveImmediate) then
-			selA <= "1111";
-			selA <= "1111";
-			aluSel <= "100"; -- AND or OR
-			selWrite <= CODOP(NBITS-5 downto NBITS-8);
-			writeSource <= '1';
 
 			state := moveImmediate2;
 			countClock <= "00000011";
@@ -90,32 +105,34 @@ BEGIN
 
 		--moveImmediate2: memorize
 		elsif(RISING_EDGE(clk) AND run = '1' AND state = moveImmediate2) then
-		
-			state := done;
-			countClock <= "00000000";
-			idleSignal <= '1';
-			CODOPSave <= '1';
-
-		--operation
-		elsif(RISING_EDGE(clk) AND run = '1' AND state = operation) then
-			selA <= CODOP(NBITS-5 downto NBITS-8);
-			selB <= CODOP(NBITS-9 downto NBITS-12);
-			aluSel <= CODOP(NBITS-2 downto NBITS-4);
-			selWrite <= CODOP(NBITS-5 downto NBITS-8);
-
-			state := done;
-			countClock <= "00000000";
-			idleSignal <= '1';
-			CODOPSave <= '1';
-
-		--DONE
-		elsif(RISING_EDGE(clk) AND run = '1' AND state = done) then
 			selA <= "1111";
 			selB <= "1111";
 			aluSel <= "111";
 			selWrite <= "1111";
 			DoneSignal <= '1';
 			writeSource <= '0';
+		
+			state := done;
+			countClock <= "00001111";
+			idleSignal <= '1';
+			CODOPSave <= '1';
+
+		--operation
+		elsif(RISING_EDGE(clk) AND run = '1' AND state = operation) then
+			selA <= "1111";
+			selB <= "1111";
+			aluSel <= "111";
+			selWrite <= "1111";
+			DoneSignal <= '1';
+			writeSource <= '0';
+
+			state := done;
+			countClock <= "00001111";
+			idleSignal <= '1';
+			CODOPSave <= '1';
+
+		--DONE
+		elsif(RISING_EDGE(clk) AND run = '1' AND state = done) then
 
 			state := idle;
 			countClock <= "00000000";

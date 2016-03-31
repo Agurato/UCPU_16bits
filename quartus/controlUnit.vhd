@@ -6,8 +6,10 @@ GENERIC(NBITS : positive := 16);
 PORT (
 	clock, Run, nReset: IN std_logic;
 	Din: IN std_logic_vector(NBITS-1 downto 0);
-	Done, idle : OUT std_logic;
+	Done, idle, writing0, writing1: OUT std_logic;
 	Result : OUT std_logic_vector(NBITS-1 downto 0);
+	in0 : OUT std_logic_vector(NBITS-1 downto 0);
+	in1 : OUT std_logic_vector(NBITS-1 downto 0);
 	countClock : OUT std_logic_vector(7 downto 0);
 	CODOPout : OUT std_logic_vector(3 downto 0)
 );
@@ -83,9 +85,11 @@ SIGNAL write_in_reg : STD_LOGIC_VECTOR(NBITS-1 downto 0);
 SIGNAL write_data : STD_LOGIC_VECTOR(NBITS-1 downto 0);
 SIGNAL reg_output : data_array;
 
+SIGNAL reg_a : STD_LOGIC_VECTOR(NBITS-1 downto 0);
 SIGNAL a : STD_LOGIC_VECTOR(NBITS-1 downto 0);
 SIGNAL sel_a : std_logic_vector(3 downto 0);
 SIGNAL sel_b : std_logic_vector(3 downto 0);
+SIGNAL reg_b : STD_LOGIC_VECTOR(NBITS-1 downto 0);
 SIGNAL b : STD_LOGIC_VECTOR(NBITS-1 downto 0);
 
 SIGNAL sel_alu : STD_LOGIC_VECTOR(2 downto 0);
@@ -99,6 +103,9 @@ SIGNAL saveCODOP : STD_LOGIC := '1';
 SIGNAL write_origin : STD_LOGIC;
 
 BEGIN
+	writing0 <= write_in_reg(0);
+	writing1 <= write_in_reg(1);
+
 	reg0 : REGISTER_N GENERIC MAP(NBITS) PORT MAP(d => write_data, q => reg_output(0), en => write_in_reg(0), clk => clock, r => nReset);
 	reg1 : REGISTER_N GENERIC MAP(NBITS) PORT MAP(d => write_data, q => reg_output(1), en => write_in_reg(1), clk => clock, r => nReset);
 	reg2 : REGISTER_N GENERIC MAP(NBITS) PORT MAP(d => write_data, q => reg_output(2), en => write_in_reg(2), clk => clock, r => nReset);
@@ -111,7 +118,6 @@ BEGIN
 	muxA : MUX_8_N GENERIC MAP(NBITS) PORT MAP(a => reg_output(0), b => reg_output(1), c => reg_output(2), d => reg_output(4),
 															 e => reg_output(4), f => reg_output(5), g => reg_output(6), h => reg_output(7),
 															 sel => sel_a(2 downto 0), s => a);
-
 	muxB : MUX_8_N GENERIC MAP(NBITS) PORT MAP(a => reg_output(0), b => reg_output(1), c => reg_output(2), d => reg_output(4),
 															 e => reg_output(4), f => reg_output(5), g => reg_output(6), h => reg_output(7),
 															 sel => sel_b(2 downto 0), s => b);
@@ -122,7 +128,9 @@ BEGIN
 
 	dataSelector : MUX_2_N GENERIC MAP(NBITS) PORT MAP(a => alu_output, b => Din,
 																		sel => write_origin, s => write_data);
-	Result <= write_data;
+	Result <= alu_output;
+	in1 <= reg_output(1);
+	in0 <= reg_output(0);
 
 	codopRegister : REGISTER_N GENERIC MAP(NBITS) PORT MAP (d => Din, en => saveCODOP, clk => clock, r => nReset, q => CODOP);
 	
