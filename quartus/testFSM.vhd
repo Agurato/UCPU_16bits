@@ -48,6 +48,24 @@ PORT (
 );
 END COMPONENT;
 
+COMPONENT ControlUnit IS
+GENERIC(NBITS : positive := 16);
+PORT (
+	run, reset: IN std_logic;
+	CODOP: IN std_logic_vector(NBITS-1 downto 0);
+	CODOPSave : OUT std_logic;
+	selA, selB : OUT std_logic_vector(3 downto 0);
+	aluSel : OUT std_logic_vector(2 downto 0);
+	selWrite : OUT std_logic_vector(3 downto 0);
+	writeSource: OUT std_logic;
+	DoneSignal, idleSignal : OUT std_logic;
+	countClock : OUT std_logic_vector(7 downto 0);
+	clk: IN std_logic;
+	CODOPout : OUT std_logic_vector(3 downto 0)
+);
+
+END COMPONENT;
+
 COMPONENT debouncer is
 	port(s_i, clk: IN std_logic;
 			s_o: OUT std_logic);
@@ -69,11 +87,16 @@ BEGIN
 	--LEDR(16) <= SW(16);
 	LEDR(15 downto 0) <= SW(15 downto 0);
 	
-	beloved_cpu : CPU GENERIC MAP(16) PORT MAP(clock => clockSignal, Run => SW(17), nReset => KEY(0),
-														Din => SW(15 downto 0),
-														Result => output, in0 => in0, in1 => in1, Done => LEDG(7), idle => idleState,
-														countClock => countClock, CODOPout => instruction,
-														writing0 => LEDG(4), writing1 => LEDG(3));
+	--beloved_cpu : CPU GENERIC MAP(16) PORT MAP(clock => clockSignal, Run => SW(17), nReset => KEY(0),
+	--													Din => SW(15 downto 0),
+	--													Result => output, in0 => in0, in1 => in1, Done => LEDG(7), idle => idleState,
+	--													countClock => countClock, CODOPout => instruction,
+	--													writing0 => LEDG(4), writing1 => LEDG(3));
+	stateMachine : ControlUnit GENERIC MAP(16) PORT MAP(run => SW(17), reset => KEY(0), clk => clockSignal,
+																CODOP => SW(15 downto 0),
+																selA => in0(3 downto 0), selB => in1(3 downto 0),
+																aluSel => output(6 downto 4), selWrite => output(3 downto 0), writeSource=> LEDG(1)
+																countClock => countClock);
 														
 	hexa5 : HEXA_DISPLAY PORT MAP (input => output(7 downto 4), display => HEX5);
 	hexa4 : HEXA_DISPLAY PORT MAP (input => output(3 downto 0), display => HEX4);
@@ -86,15 +109,6 @@ BEGIN
 	
 	count1 : HEXA_DISPLAY PORT MAP (input => instruction, display => HEX6);
 	count2 : HEXA_DISPLAY PORT MAP (input => countClock(3 downto 0), display => HEX7);
-	
-	--process(idleState)
-	--begin
-	--	if idleState = '1' then
-	--		HEX7 <= "1001111";
-	--	else
-	--		HEX7 <= "0011000";
-	--	end if;
-	--end process;
 	
 	LEDG(0) <= NOT(key(0));
 	LEDG(6) <= clockSignal;

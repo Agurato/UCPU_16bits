@@ -16,10 +16,13 @@ PORT (
 	clk: IN std_logic;
 	CODOPout : OUT std_logic_vector(3 downto 0)
 );
+
 END ControlUnit;
 
 ARCHITECTURE Behavior OF ControlUnit IS
 TYPE state_t IS (idle, move, moveImmediate, moveImmediate2, operation, done);
+
+SIGNAL CODOP_saved : STD_LOGIC_VECTOR(NBITS-1 downto 0);
 
 BEGIN
 	PROCESS(clk, reset)
@@ -28,6 +31,7 @@ BEGIN
 		--reset
 		if(reset = '0') then
 			CODOPSave <= '1';
+			CODOPout <= CODOP(NBITS-1 downto NBITS-4);
 			selA <= "1111"; -- A from In
 			selB <= "1111"; -- B from In
 			aluSel <= "111"; -- empty operation from alu
@@ -45,6 +49,7 @@ BEGIN
 			--do things
 			DoneSignal <= '0';
 			--store CODOP
+			CODOP_saved <= CODOP;
 			CODOPSave <= '0';
 			CODOPout <= CODOP(NBITS-1 downto NBITS-4);
 
@@ -84,12 +89,6 @@ BEGIN
 
 		--move
 		elsif(RISING_EDGE(clk) AND run = '1' AND state = move) then
-			selA <= "1111";
-			selB <= "1111";
-			aluSel <= "111";
-			selWrite <= "1111";
-			DoneSignal <= '1';
-			writeSource <= '0';
 
 			state := done;
 			countClock <= "00001111";
@@ -105,12 +104,6 @@ BEGIN
 
 		--moveImmediate2: memorize
 		elsif(RISING_EDGE(clk) AND run = '1' AND state = moveImmediate2) then
-			selA <= "1111";
-			selB <= "1111";
-			aluSel <= "111";
-			selWrite <= "1111";
-			DoneSignal <= '1';
-			writeSource <= '0';
 		
 			state := done;
 			countClock <= "00001111";
@@ -119,12 +112,6 @@ BEGIN
 
 		--operation
 		elsif(RISING_EDGE(clk) AND run = '1' AND state = operation) then
-			selA <= "1111";
-			selB <= "1111";
-			aluSel <= "111";
-			selWrite <= "1111";
-			DoneSignal <= '1';
-			writeSource <= '0';
 
 			state := done;
 			countClock <= "00001111";
@@ -133,6 +120,12 @@ BEGIN
 
 		--DONE
 		elsif(RISING_EDGE(clk) AND run = '1' AND state = done) then
+			selA <= "1111";
+			selB <= "1111";
+			aluSel <= "111";
+			selWrite <= "1111";
+			DoneSignal <= '1';
+			writeSource <= '0';
 
 			state := idle;
 			countClock <= "00000000";
