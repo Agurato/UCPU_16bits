@@ -65,14 +65,14 @@ BEGIN
 	-- utiliser le truc du controle
 
 	LEDR(17) <= SW(17);
-	LEDR(16) <= '1';
+	LEDR(16) <= '0';
 	LEDR(15 downto 0) <= SW(15 downto 0);
 	
 	beloved_cpu : CPU GENERIC MAP(16) PORT MAP(clock => clockSignal, Run => SW(17), nReset => KEY(0),
 														Din => SW(15 downto 0),
 														Result => output, in0 => in0, in1 => in1, Done => LEDG(7), idle => idleState,
 														countClock => countClock, CODOPout => instruction,
-														writing0 => LEDG(4), writing1 => LEDG(3));
+														writing0 => LEDG(5), writing1 => LEDG(4));
 														
 	hexa5 : HEXA_DISPLAY PORT MAP (input => output(7 downto 4), display => HEX5);
 	hexa4 : HEXA_DISPLAY PORT MAP (input => output(3 downto 0), display => HEX4);
@@ -89,5 +89,7 @@ BEGIN
 	LEDG(0) <= NOT(key(0));
 	LEDG(6) <= clockSignal;
 	clockDeboncer: debouncer PORT MAP(s_i => NOT(KEY(3)), s_o => clockSignal, clk => CLOCK_50);
+	
+	LEDG(3 downto 1) <= instruction(2 downto 0);
 
 END ARCHITECTURE Behavior;

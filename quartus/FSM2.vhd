@@ -13,6 +13,7 @@ PORT (
 	selWrite : OUT std_logic_vector(3 downto 0);
 	writeSource: OUT std_logic;
 	
+	CODOPout : OUT std_logic_vector(3 downto 0);
 	stateDisp : OUT std_logic_vector(7 downto 0)
 );
 END ENTITY FSM;
@@ -35,6 +36,7 @@ BEGIN
 			state := idle;
 			stateDisp <= "00000000";
 		
+		-- Idle
 		elsif(RISING_EDGE(clk) AND run = '1' AND state = idle) then
 		
 			writeSource <= '0';
@@ -67,11 +69,14 @@ BEGIN
 			
 				writeSource <= '0';
 			
-				selWrite <= CODOP(NBITS-5 downto NBITS-8);
 				selA <= CODOP(NBITS-9 downto NBITS-12);
 				selB <= CODOP(NBITS-13 downto NBITS-16);
+				
+				aluSel <= CODOP(NBITS-2 downto NBITS-4);
+				
+				selWrite <= CODOP(NBITS-5 downto NBITS-8);
 			
-				state := done;
+				state := operation;
 				stateDisp <= "00000100";
 			
 			end if;
@@ -82,6 +87,13 @@ BEGIN
 			
 			state := done;
 			stateDisp <= "00000011";
+		
+		elsif(RISING_EDGE(clk) AND run = '1' AND state = operation) then
+		
+			writeSource <= '0';
+			
+			state := done;
+			stateDisp <= "00000101";
 		
 		
 		elsif(RISING_EDGE(clk) AND run = '1' AND state = done) then
