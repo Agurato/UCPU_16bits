@@ -79,6 +79,22 @@ PORT (
 );
 END COMPONENT ControlUnit;
 
+COMPONENT FSM IS
+GENERIC(NBITS : positive := 16);
+PORT (
+	run, reset: IN std_logic;
+	CODOP: IN std_logic_vector(NBITS-1 downto 0);
+	
+	selA, selB : OUT std_logic_vector(3 downto 0);
+	aluSel : OUT std_logic_vector(2 downto 0);
+	selWrite : OUT std_logic_vector(3 downto 0);
+	writeSource: OUT std_logic;
+	
+	stateDisp : OUT std_logic_vector(7 downto 0);
+	clk: IN std_logic
+);
+END COMPONENT FSM;
+
 TYPE data_array IS ARRAY(0 to 7) OF STD_LOGIC_VECTOR(NBITS-1 downto 0);
 
 SIGNAL write_in_reg : STD_LOGIC_VECTOR(NBITS-1 downto 0);
@@ -134,10 +150,14 @@ BEGIN
 
 	codopRegister : REGISTER_N GENERIC MAP(NBITS) PORT MAP (d => Din, en => saveCODOP, clk => clock, r => nReset, q => CODOP);
 	
-	FSM : ControlUnit GENERIC MAP(NBITS) PORT MAP(run => Run, reset => nReset, CODOP => CODOP, clk => clock,
-																 aluSel => sel_alu, selA => sel_a, selB => sel_b, DoneSignal => Done, writeSource => write_origin,
-																 idleSignal => idle, selWrite => sel_write, countClock => countClock,
-																 CODOPout => CODOPout, CODOPSave => saveCODOP);
+	--FSM : ControlUnit GENERIC MAP(NBITS) PORT MAP(run => Run, reset => nReset, CODOP => CODOP, clk => clock,
+	--															 aluSel => sel_alu, selA => sel_a, selB => sel_b, DoneSignal => Done, writeSource => write_origin,
+	--															 idleSignal => idle, selWrite => sel_write, countClock => countClock,
+	--															 CODOPout => CODOPout, CODOPSave => saveCODOP);
+	
+	FSM2 : FSM GENERIC MAP (NBITS) PORT MAP (run => Run, reset => nReset, CODOP => Din, clk => clock,
+														selA => sel_a, selB => sel_b, aluSel => sel_alu, selWrite => sel_write, writeSource => write_origin,
+														stateDisp => countClock);
 
 	--with sel_write select
 	--	write_origin <=
