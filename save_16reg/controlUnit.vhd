@@ -151,17 +151,16 @@ BEGIN
 	reg12 : REGISTER_N GENERIC MAP(NBITS) PORT MAP(d => write_data, q => reg_output(12), en => write_in_reg(12), clk => clock, r => nReset);
 	reg13 : REGISTER_N GENERIC MAP(NBITS) PORT MAP(d => write_data, q => reg_output(13), en => write_in_reg(13), clk => clock, r => nReset);
 	reg14 : REGISTER_N GENERIC MAP(NBITS) PORT MAP(d => write_data, q => reg_output(14), en => write_in_reg(14), clk => clock, r => nReset);
-	reg15 : REGISTER_N GENERIC MAP(NBITS) PORT MAP(d => write_data, q => reg_output(15), en => write_in_reg(15), clk => clock, r => nReset);
 
 	muxA : MUX_16_N GENERIC MAP(NBITS) PORT MAP(a => reg_output(0), b => reg_output(1), c => reg_output(2), d => reg_output(4),
 															 e => reg_output(4), f => reg_output(5), g => reg_output(6), h => reg_output(7),
 															 i => reg_output(8), j => reg_output(9), k => reg_output(10), l => reg_output(11),
-															 m => reg_output(12), n => reg_output(13), o => reg_output(14), p => reg_output(15),
+															 m => reg_output(12), n => reg_output(13), o => reg_output(14),
 															 sel => sel_a, s => a);
 	muxB : MUX_16_N GENERIC MAP(NBITS) PORT MAP(a => reg_output(0), b => reg_output(1), c => reg_output(2), d => reg_output(4),
 															 e => reg_output(4), f => reg_output(5), g => reg_output(6), h => reg_output(7),
 															 i => reg_output(8), j => reg_output(9), k => reg_output(10), l => reg_output(11),
-															 m => reg_output(12), n => reg_output(13), o => reg_output(14), p => reg_output(15),
+															 m => reg_output(12), n => reg_output(13), o => reg_output(14),
 															 sel => sel_b, s => b);
 
 	alu : ALU_8_N GENERIC MAP(NBITS) PORT MAP(a => a, b => b,

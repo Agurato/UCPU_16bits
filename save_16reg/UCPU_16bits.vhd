@@ -6,7 +6,7 @@ PORT (
 	
 	SW : in STD_LOGIC_VECTOR(17 downto 0);
 	LEDR : out STD_LOGIC_VECTOR(17 downto 0);
-	LEDG: out STD_LOGIC_VECTOR(8 downto 0);
+	LEDG: out STD_LOGIC_VECTOR(7 downto 0);
 	HEX7, HEX6, HEX5, HEX4, HEX3, HEX2, HEX1, HEX0: out STD_LOGIC_VECTOR(0 to 6);
 	KEY: in STD_LOGIC_VECTOR(7 downto 0);
 	CLOCK_50: IN STD_LOGIC
@@ -44,6 +44,22 @@ COMPONENT debouncer is
 			s_o: OUT std_logic);
 END COMPONENT debouncer;
 
+COMPONENT ROM IS
+PORT (
+	pointer : in STD_LOGIC_VECTOR(3 downto 0);
+	instruction : out STD_LOGIC_VECTOR(15 downto 0)
+);
+END COMPONENT ROM;
+
+COMPONENT addr_store IS
+	PORT(
+		JMP_addr : in STD_LOGIC_VECTOR(3 downto 0);
+		reset, clk : in STD_LOGIC;
+		increment : in STD_LOGIC;
+		ptr_out : out STD_LOGIC_VECTOR(3 downto 0)
+	);
+END COMPONENT addr_store;
+
 Signal output, in0, in1 : STD_LOGIC_VECTOR(15 downto 0);
 Signal overAdd, overMult : STD_LOGIC;
 Signal clockSignal: STD_LOGIC;
@@ -51,22 +67,30 @@ Signal idleState : STD_LOGIC;
 Signal countClock : STD_LOGIC_VECTOR(7 downto 0);
 Signal instruction : STD_LOGIC_VECTOR(3 downto 0);
 
+SIGNAL addr_transmit : STD_LOGIC_VECTOR(3 downto 0);
+SIGNAL Din : STD_LOGIC_VECTOR(15 downto 0);
+
 BEGIN
 
 	-- utiliser le truc du controle
 
 	LEDR(17) <= SW(17);
 	LEDR(16) <= '0';
-	LEDR(15 downto 0) <= SW(15 downto 0);
+	LEDR(15 downto 0) <= Din;
+	
+	memory : ROM PORT MAP(pointer => addr_transmit, instruction => Din);
+	
+	addr_selector : addr_store PORT MAP(JMP_addr => "0000", reset => NOT(KEY(0)), clk => clockSignal,
+													increment => '1', ptr_out => addr_transmit);
 	
 	beloved_cpu : CPU GENERIC MAP(16) PORT MAP(clock => clockSignal, Run => SW(17), nReset => KEY(0),
-														Din => SW(15 downto 0),
+														Din => Din,
 														Result => output, in0 => in0, in1 => in1, Done => LEDG(7), idle => idleState,
 														countClock => countClock, CODOPout => instruction,
-														writing0 => LEDG(5), writing1 => LEDG(4), overflow => LEDG(8));
+														writing0 => LEDG(5), writing1 => LEDG(4));
 														
 	hexa5 : HEXA_DISPLAY PORT MAP (input => output(7 downto 4), display => HEX5);
-	hexa4 : HEXA_DISPLAY PORT MAP (input => output(3 downto 0), display => HEX4);
+	hexa4 : HEXA_DISPLAY PORT MAP (input => addr_transmit, display => HEX4);
 	
 	hexa3 : HEXA_DISPLAY PORT MAP (input => in0(7 downto 4), display => HEX3);
 	hexa2 : HEXA_DISPLAY PORT MAP (input => in0(3 downto 0), display => HEX2);
